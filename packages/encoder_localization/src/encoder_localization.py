@@ -28,7 +28,7 @@ class EncoderLocalizationNode(DTROS):
         self.current_state.child_frame_id = 'encoder_baselink'
         self.current_state.transform.translation.z = 0.0 # We operate in a 2D world
 
-        # Values computed using encoder data
+        # Distance traveled by each wheel computed using encoder data
         self.d_left = 0.0
         self.d_right = 0.0
 
@@ -76,12 +76,12 @@ class EncoderLocalizationNode(DTROS):
             self.initial_ticks_right = ticks
             return
 
-        # Compute linear velocity
+        # Compute distance traveled
         if wheel == 'left':
             rel_ticks = ticks - self.initial_ticks_left
             diff_ticks = rel_ticks - self.prev_left
             dist = 2 * np.pi * self._radius * (diff_ticks / self._resolution)
-            # Obtain linear velocity of left wheel
+            # Obtain distance traveled by left wheel
             self.d_left = dist
             # Update previous number of ticks
             self.prev_left = rel_ticks
@@ -90,7 +90,7 @@ class EncoderLocalizationNode(DTROS):
             rel_ticks = ticks - self.initial_ticks_right
             diff_ticks = rel_ticks - self.prev_right
             dist = 2 * np.pi * self._radius * (diff_ticks / self._resolution)
-            # Obtain linear velocity of right wheel
+            # Obtain distance traveled by right wheel
             self.d_right = dist
             # Update previous number of ticks
             self.prev_right = rel_ticks
@@ -102,9 +102,6 @@ class EncoderLocalizationNode(DTROS):
         self.pose.x = self.pose.x + d * np.cos(self.pose.theta)
         self.pose.y = self.pose.y + d * np.sin(self.pose.theta)
         self.pose.theta = self.pose.theta + delta_theta
-        
-        # Update timestamp of transform message
-        self.current_state.header.stamp = msg.header.stamp
 
     
     def publish_transform(self, timer):
