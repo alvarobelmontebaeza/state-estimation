@@ -88,7 +88,7 @@ class EncoderLocalizationNode(DTROS):
 
         elif wheel == 'right':
             rel_ticks = ticks - self.initial_ticks_right
-            diff_ticks = np.abs(rel_ticks - self.prev_right)
+            diff_ticks = rel_ticks - self.prev_right
             dist = 2 * np.pi * self._radius * (diff_ticks / self._resolution)
             # Obtain linear velocity of right wheel
             self.d_right = dist
