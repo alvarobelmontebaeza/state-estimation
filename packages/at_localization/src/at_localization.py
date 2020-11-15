@@ -176,11 +176,19 @@ class ATLocalizationNode(DTROS):
             return []
     
     def _init_rectify_maps(self):
+        # Get new optimal camera matrix
         W = self.cam_model.width
         H = self.cam_model.height
+        rect_camera_K, _ = cv2.getOptimalNewCameraMatrix(
+            self.cam_info.K,
+            self.cam_info.D,
+            (W,H),
+            1.0
+        )
+        # Initialize rectification maps
         mapx = np.ndarray(shape=(H,W,1), dtype='float32')
         mapy = np.ndarray(shape=(H,W,1), dtype='float32')
-        mapx, mapy = cv2.initUndistortRectifyMap(self.cam_model.K, self.cam_model.D,self.cam_model.R,self.cam_model.P,(W,H),cv2.CV_32FC1,mapx,mapy)
+        mapx, mapy = cv2.initUndistortRectifyMap(self.cam_model.K, self.cam_model.D,np.eye(3),rect_camera_K,(W,H),cv2.CV_32FC1,mapx,mapy)
 
         self.mapx = mapx
         self.mapy = mapy       
