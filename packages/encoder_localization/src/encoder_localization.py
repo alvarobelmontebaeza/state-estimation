@@ -22,8 +22,7 @@ class EncoderLocalizationNode(DTROS):
         # State variables for the robot
         self.pose = Pose2DStamped(None,0.0,0.0,0.0) # Initial state given arbitrarily
         self.twist = Twist2DStamped(None,0.0,0.0)
-        self.last_t = rospy.get_time()
-
+        
         # Transform that defines robot state
         self.current_state = TransformStamped()
         self.current_state.header.frame_id = 'map'
@@ -50,13 +49,14 @@ class EncoderLocalizationNode(DTROS):
         self._radius = rospy.get_param('/' + self.veh_name + '/kinematics_node/radius', 100)
         self._baseline = rospy.get_param('/' + self.veh_name + '/kinematics_node/baseline', 100)
         self._resolution = 135.0
+        self.log(self._radius)
 
         # Subscribing to the wheel encoders
         self.sub_encoder_ticks_left = rospy.Subscriber('/' + self.veh_name + '/left_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='left')
         self.sub_encoder_ticks_right = rospy.Subscriber('/' + self.veh_name + '/right_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='right')
 
         # Publishers
-        self.pub_robot_pose_tf = rospy.Publisher('~encoder_localization/pose_transform',TransformStamped,queue_size=1)
+        self.pub_robot_pose_tf = rospy.Publisher('~pose_transform',TransformStamped,queue_size=1)
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
         # Define timer to publish messages at a 30 Hz frequency
         self.pub_timer = rospy.Timer(rospy.Duration(1.0/30.0), self.publish_transform)
@@ -69,37 +69,42 @@ class EncoderLocalizationNode(DTROS):
         """
         # Retrieve encoder data
         ticks = msg.data
+        curr_time = rospy.get_time()
 
         # Check if it's the first received message and store initial encoder value and time
         if wheel == 'left' and self.first_message_left == True:
             self.first_message_left = False
             self.initial_ticks_left = ticks
             self.last_t_left = rospy.get_time()
+            return
         if wheel == 'right' and self.first_message_right ==True:
             self.first_message_right = False
             self.initial_ticks_right = ticks
             self.last_t_right = rospy.get_time()
+            return
 
         # Compute linear velocity
         if wheel == 'left':
             rel_ticks = ticks - self.initial_ticks_left
             diff_ticks = rel_ticks - self.prev_left
             dist = 2 * np.pi * self._radius * (diff_ticks / self._resolution)
-            dt = rospy.get_time() - self.last_t_left
+            dt = curr_time - self.last_t_left
             # Obtain linear velocity of left wheel
             self.v_left = dist / dt
             # Update previous number of ticks
             self.prev_left = rel_ticks
+            self.last_t_left = curr_time 
 
         elif wheel == 'right':
             rel_ticks = ticks - self.initial_ticks_right
             diff_ticks = np.abs(rel_ticks - self.prev_right)
             dist = 2 * np.pi * self._radius * (diff_ticks / self._resolution)
-            dt = rospy.get_time() - self.last_t_left
+            dt = curr_time - self.last_t_left
             # Obtain linear velocity of right wheel
             self.v_right = dist / dt
             # Update previous number of ticks
             self.prev_right = rel_ticks
+            self.last_t_right = curr_time
         
         ####### UPDATE STATE ##########
 
@@ -107,7 +112,6 @@ class EncoderLocalizationNode(DTROS):
         self.twist.v = (self.v_left + self.v_right) / 2.0
         self.twist.omega = (self.v_left - self.v_right) / self._baseline
         # Compute current position
-        dt = rospy.get_time() - self.last_t
         self.pose.x = self.pose.x + (self.twist.v * dt) * np.cos(self.pose.theta)
         self.pose.y = self.pose.y + (self.twist.v * dt) * np.sin(self.pose.theta)
         self.pose.theta = self.twist.omega * dt
@@ -121,6 +125,7 @@ class EncoderLocalizationNode(DTROS):
         Callback method for ROS timer to publish messages at a fixed rate
         '''
         ###### PUBLISH TRANSFORM MESSAGE ########
+        self.current_state.header.stamp = rospy.Time.now()
         # Update transform message
         # Translation
         self.current_state.transform.translation.x = self.pose.x
