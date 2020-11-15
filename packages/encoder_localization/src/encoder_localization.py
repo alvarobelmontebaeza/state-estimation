@@ -20,8 +20,8 @@ class EncoderLocalizationNode(DTROS):
         self.veh_name = os.environ['VEHICLE_NAME']
 
         # State variables for the robot
-        self.pose = Pose2DStamped(0.0,0.0,0.0) # Initial state given arbitrarily
-        self.twist = Twist2DStamped(0.0,0.0)
+        self.pose = Pose2DStamped(None,0.0,0.0,0.0) # Initial state given arbitrarily
+        self.twist = Twist2DStamped(None,0.0,0.0)
         self.last_t = rospy.get_time()
 
         # Transform that defines robot state
