@@ -69,6 +69,9 @@ class ATLocalizationNode(DTROS):
 
         # Retrieve intrinsic info
         self.cam_info = self.setCamInfo(self.calib_data)
+        # Initiate maps for rectification
+        self._init_rectify_maps()
+
         # Create AprilTag detector object
         self.at_detector = Detector()
 
@@ -95,6 +98,8 @@ class ATLocalizationNode(DTROS):
         '''
         # Convert to cv2 image
         image = self.readImage(ros_image)
+        # Rectify image
+        # image = self.processImage(image)
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Extract camera parameters
@@ -118,7 +123,7 @@ class ATLocalizationNode(DTROS):
             self.T_CA = tf_conversions.transformations.concatenate_matrices(self.T_CC,T_CA_prime,self.T_AA)
             # Compute map->baselink transform
             self.T_MB = tf_conversions.transformations.concatenate_matrices(
-                self.T_MA,self.T_AA,self.T_CA,self.T_CC,self.T_CB)
+                self.T_MA,self.T_AA,self.T_CA,self.T_CC,self.T_CB
             )
 
             # Obtain TransformStamped messages
@@ -129,6 +134,15 @@ class ATLocalizationNode(DTROS):
             self.T_map_baselink.header.stamp = ros_image.header.stamp
             self.T_map_baselink.transform.translation = tf_conversions.transformations.translation_from_matrix(self.T_MB)
             self.T_map_baselink.transform.rotation = tf_conversions.transformations.quaternion_from_matrix(self.T_MB)
+
+            # Publish transform map->baselink
+            self.pub_robot_pose_tf.publish(self.T_map_baselink)
+            # Broadcast all transforms
+            self.static_tf_br.sendTransform(self._T_map_apriltag)
+            self.static_tf_br.sendTransform(self._T_camera_baselink)
+            self.tfBroadcaster.sendTransformMessage(self.T_apriltag_camera)
+
+
 
     def setCamInfo(self, calib_data):
         '''
@@ -160,6 +174,32 @@ class ATLocalizationNode(DTROS):
         except CvBridgeError as e:
             self.log(e)
             return []
+    
+    def _init_rectify_maps(self):
+        W = self.cam_model.width
+        H = self.cam_model.height
+        mapx = np.ndarray(shape=(H,W,1), dtype='float32')
+        mapy = np.ndarray(shape=(H,W,1), dtype='float32')
+        mapx, mapy = cv2.initUndistortRectifyMap(self.cam_model.K, self.cam_model.D,self.cam_model.R,self.cam_model.P,(W,H),cv2.CV_32FC1,mapx,mapy)
+
+        self.mapx = mapx
+        self.mapy = mapy       
+    
+    def processImage(self, raw_image, interpolation=cv2.INTER_NEAREST):
+        '''
+        Undistort a provided image using the calibrated camera info
+        Implementation based on: https://github.com/duckietown/dt-core/blob/952ebf205623a2a8317fcb9b922717bd4ea43c98/packages/image_processing/include/image_processing/rectification.py
+        Args:
+            raw_image: A CV image to be rectified
+            interpolation: Type of interpolation. For more accuracy, use another cv2 provided constant
+        Return:
+            Undistorted image
+        '''
+        image_rectified = np.empty_like(raw_image)
+        processed_image = cv2.remap(raw_image,self.mapx,self.mapy,interpolation,image_rectified)
+
+        return processed_image
+
 
     def readYamlFile(self,fname):
         """
