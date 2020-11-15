@@ -58,6 +58,8 @@ class EncoderLocalizationNode(DTROS):
         # Publishers
         self.pub_robot_pose_tf = rospy.Publisher('~encoder_localization/pose_transform',TransformStamped,queue_size=1)
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
+        # Define timer to publish messages at a 30 Hz frequency
+        self.pub_timer = rospy.Timer(rospy.Duration(1.0/30.0), self.publish_transform)
 
         self.log("Initialized")
 
@@ -109,7 +111,11 @@ class EncoderLocalizationNode(DTROS):
         self.pose.x = self.pose.x + (self.twist.v * dt) * np.cos(self.pose.theta)
         self.pose.y = self.pose.y + (self.twist.v * dt) * np.sin(self.pose.theta)
         self.pose.theta = self.twist.omega * dt
-
+    
+    def publish_transform(self):
+        '''
+        Callback method for ROS timer to publish messages at a fixed rate
+        '''
         ###### PUBLISH TRANSFORM MESSAGE ########
         self.current_state.header.stamp = msg.header.stamp
         # Update transform message
@@ -125,8 +131,9 @@ class EncoderLocalizationNode(DTROS):
         self.current_state.transform.rotation.w = q[3]
 
         # Publish and broadcast the transform
-        self.pub_robot_pose_tf(self.current_state)
+        self.pub_robot_pose_tf.publish(self.current_state)
         self.tfBroadcaster.sendTransformMessage(self.current_state)
+    
              
         
 if __name__ == '__main__':
