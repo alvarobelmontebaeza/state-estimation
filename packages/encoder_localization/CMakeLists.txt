@@ -3,7 +3,7 @@ project(encoder_localization)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
-  sensor_msgs
+  tf
   geometry_msgs
   duckietown_msgs
 )
