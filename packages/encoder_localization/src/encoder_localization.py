@@ -52,8 +52,8 @@ class EncoderLocalizationNode(DTROS):
         self._resolution = 135.0
 
         # Subscribing to the wheel encoders
-        self.sub_encoder_ticks_left = rospy.Subscriber(f'{self.veh_name}/left_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='left')
-        self.sub_encoder_ticks_right = rospy.Subscriber(f'{self.veh_name}/right_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='right')
+        self.sub_encoder_ticks_left = rospy.Subscriber('/' + self.veh_name + 'left_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='left')
+        self.sub_encoder_ticks_right = rospy.Subscriber('/' + self.veh_name + 'right_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='right')
 
         # Publishers
         self.pub_robot_pose_tf = rospy.Publisher('~encoder_localization/pose_transform',TransformStamped,queue_size=1)
