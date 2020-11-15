@@ -111,13 +111,16 @@ class EncoderLocalizationNode(DTROS):
         self.pose.x = self.pose.x + (self.twist.v * dt) * np.cos(self.pose.theta)
         self.pose.y = self.pose.y + (self.twist.v * dt) * np.sin(self.pose.theta)
         self.pose.theta = self.twist.omega * dt
+        
+        # Update timestamp of transform message
+        self.current_state.header.stamp = msg.header.stamp
+
     
     def publish_transform(self):
         '''
         Callback method for ROS timer to publish messages at a fixed rate
         '''
         ###### PUBLISH TRANSFORM MESSAGE ########
-        self.current_state.header.stamp = msg.header.stamp
         # Update transform message
         # Translation
         self.current_state.transform.translation.x = self.pose.x
