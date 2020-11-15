@@ -68,7 +68,7 @@ class ATLocalizationNode(DTROS):
         self.log('Loaded extrinsics calibration file') 
 
         # Retrieve intrinsic info
-        self.cam_info = self.setCamInfo(self.calib_data)
+        self.cam_model = self.setCamInfo(self.calib_data)
         # Initiate maps for rectification
         self._init_rectify_maps()
 
@@ -103,7 +103,7 @@ class ATLocalizationNode(DTROS):
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Extract camera parameters
-        K = np.array(self.cam_info.K).reshape((3,3))
+        K = np.array(self.cam_model.K).reshape((3,3))
         cam_params = (K[0,0], K[1,1], K[0,2], K[1,2])
 
         # Detect apriltags
@@ -180,8 +180,8 @@ class ATLocalizationNode(DTROS):
         W = self.cam_model.width
         H = self.cam_model.height
         rect_camera_K, _ = cv2.getOptimalNewCameraMatrix(
-            self.cam_info.K,
-            self.cam_info.D,
+            self.cam_model.K,
+            self.cam_model.D,
             (W,H),
             1.0
         )
@@ -189,7 +189,7 @@ class ATLocalizationNode(DTROS):
         mapx = np.ndarray(shape=(H,W,1), dtype='float32')
         mapy = np.ndarray(shape=(H,W,1), dtype='float32')
         mapx, mapy = cv2.initUndistortRectifyMap(self.cam_model.K, self.cam_model.D,np.eye(3),rect_camera_K,(W,H),cv2.CV_32FC1,mapx,mapy)
-
+        self.cam_model.K = rect_camera_K
         self.mapx = mapx
         self.mapy = mapy       
     
