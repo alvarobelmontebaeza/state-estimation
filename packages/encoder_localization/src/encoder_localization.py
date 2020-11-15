@@ -124,7 +124,7 @@ class EncoderLocalizationNode(DTROS):
         Callback method for ROS timer to publish messages at a fixed rate
         '''
         ###### PUBLISH TRANSFORM MESSAGE ########
-        # self.current_state.header.stamp = rospy.Time.now()
+        self.current_state.header.stamp = rospy.Time.now()
         # Update transform message
         # Translation
         self.current_state.transform.translation.x = self.pose.x
