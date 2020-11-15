@@ -13,7 +13,9 @@ dt-launchfile-init
 # NOTE: Use `dt-exec COMMAND` to run the main process (blocking process)
 
 # launching app
-dt-exec echo "This is an empty launch script. Update it to launch your application."
+echo "You haven't specified a launcher! Please use the following syntax: "
+echo "dts devel run --launcher <launcher_name>.sh"
+echo "Currently provided launchers are: encoder_localization.sh"
 
 
 # ----------------------------------------------------------------------------
