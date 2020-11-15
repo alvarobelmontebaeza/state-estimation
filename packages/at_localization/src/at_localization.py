@@ -135,7 +135,7 @@ class ATLocalizationNode(DTROS):
             self.T_map_baselink.transform.translation = tf_conversions.transformations.translation_from_matrix(self.T_MB)
             self.T_map_baselink.transform.rotation = tf_conversions.transformations.quaternion_from_matrix(self.T_MB)
 
-            # Publish transform map->baselink
+            # Publish transform map -> baselink
             self.pub_robot_pose_tf.publish(self.T_map_baselink)
             # Broadcast all transforms
             self.static_tf_br.sendTransform(self._T_map_apriltag)

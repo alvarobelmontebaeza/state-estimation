@@ -15,7 +15,7 @@ dt-launchfile-init
 # launching app
 echo "You haven't specified a launcher! Please use the following syntax: "
 echo "dts devel run --launcher <launcher_name>.sh"
-echo "Currently provided launchers are: encoder_localization.sh"
+echo "Currently provided launchers are: encoder_localization, at_localization"
 
 
 # ----------------------------------------------------------------------------
