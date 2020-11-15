@@ -22,7 +22,7 @@ class EncoderLocalizationNode(DTROS):
         # State variables for the robot
         self.pose = Pose2DStamped(None,0.0,0.0,0.0) # Initial state given arbitrarily
         self.twist = Twist2DStamped(None,0.0,0.0)
-        
+
         # Transform that defines robot state
         self.current_state = TransformStamped()
         self.current_state.header.frame_id = 'map'
@@ -49,7 +49,6 @@ class EncoderLocalizationNode(DTROS):
         self._radius = rospy.get_param('/' + self.veh_name + '/kinematics_node/radius', 100)
         self._baseline = rospy.get_param('/' + self.veh_name + '/kinematics_node/baseline', 100)
         self._resolution = 135.0
-        self.log(self._radius)
 
         # Subscribing to the wheel encoders
         self.sub_encoder_ticks_left = rospy.Subscriber('/' + self.veh_name + '/left_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='left')
@@ -114,7 +113,7 @@ class EncoderLocalizationNode(DTROS):
         # Compute current position
         self.pose.x = self.pose.x + (self.twist.v * dt) * np.cos(self.pose.theta)
         self.pose.y = self.pose.y + (self.twist.v * dt) * np.sin(self.pose.theta)
-        self.pose.theta = self.twist.omega * dt
+        self.pose.theta = self.pose.theta + self.twist.omega * dt
         
         # Update timestamp of transform message
         self.current_state.header.stamp = msg.header.stamp
@@ -125,7 +124,7 @@ class EncoderLocalizationNode(DTROS):
         Callback method for ROS timer to publish messages at a fixed rate
         '''
         ###### PUBLISH TRANSFORM MESSAGE ########
-        self.current_state.header.stamp = rospy.Time.now()
+        # self.current_state.header.stamp = rospy.Time.now()
         # Update transform message
         # Translation
         self.current_state.transform.translation.x = self.pose.x
