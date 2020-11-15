@@ -1,2 +1,3 @@
 # LIST YOUR PYTHON3 PACKAGES HERE
 numpy
+dt-apriltags
