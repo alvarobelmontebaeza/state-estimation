@@ -4,8 +4,9 @@ import os
 import rospy
 from duckietown.dtros import DTROS, NodeType, TopicType, DTParam, ParamType
 from duckietown_msgs.msg import Pose2DStamped, Twist2DStamped, WheelEncoderStamped
-from std_msgs.msg import Header, Float32
 from geometry_msgs.msg import TransformStamped
+import tf
+import tf_conversions
 
 class EncoderLocalizationNode(DTROS):
 
@@ -27,13 +28,12 @@ class EncoderLocalizationNode(DTROS):
         self.current_state = TransformStamped()
         self.current_state.header.frame_id = 'map'
         self.current_state.child_frame_id = 'encoder_baselink'
+        self.current_state.transform.translation.z = 0.0 # We operate in a 2D world
 
         # Values computed using encoder data
         self.v_left = 0.0
         self.v_right = 0.0
-        self.omega_l = 0.0
-        self.omega_r = 0.0
-        
+
         # Variables to account for previous step
         self.prev_left = 0.0
         self.prev_right = 0.0
@@ -57,6 +57,7 @@ class EncoderLocalizationNode(DTROS):
 
         # Publishers
         self.pub_robot_pose_tf = rospy.Publisher('~encoder_localization/pose_transform',TransformStamped,queue_size=1)
+        self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
 
         self.log("Initialized")
 
@@ -77,15 +78,14 @@ class EncoderLocalizationNode(DTROS):
             self.initial_ticks_right = ticks
             self.last_t_right = rospy.get_time()
 
-        # Compute linear and angular velocity
+        # Compute linear velocity
         if wheel == 'left':
             rel_ticks = ticks - self.initial_ticks_left
             diff_ticks = rel_ticks - self.prev_left
             dist = 2 * np.pi * self._radius * (diff_ticks / self._resolution)
             dt = rospy.get_time() - self.last_t_left
-            # Obtain linear and angular velocity of left wheel
+            # Obtain linear velocity of left wheel
             self.v_left = dist / dt
-            self.omega_l = self.v_left / self._radius 
             # Update previous number of ticks
             self.prev_left = rel_ticks
 
@@ -94,9 +94,8 @@ class EncoderLocalizationNode(DTROS):
             diff_ticks = np.abs(rel_ticks - self.prev_right)
             dist = 2 * np.pi * self._radius * (diff_ticks / self._resolution)
             dt = rospy.get_time() - self.last_t_left
-            # Obtain linear and angular velocity of right wheel
+            # Obtain linear velocity of right wheel
             self.v_right = dist / dt
-            self.omega_r = self.v_right / self._radius
             # Update previous number of ticks
             self.prev_right = rel_ticks
         
@@ -113,6 +112,21 @@ class EncoderLocalizationNode(DTROS):
 
         ###### PUBLISH TRANSFORM MESSAGE ########
         self.current_state.header.stamp = msg.header.stamp
+        # Update transform message
+        # Translation
+        self.current_state.transform.translation.x = self.pose.x
+        self.current_state.transform.translation.y = self.pose.y
+        # Orientation
+        # Transform yaw to quaternion
+        q = tf_conversions.transformations.quaternion_from_euler(0, 0, self.pose.theta)
+        self.current_state.transform.rotation.x = q[0]
+        self.current_state.transform.rotation.y = q[1]
+        self.current_state.transform.rotation.z = q[2]
+        self.current_state.transform.rotation.w = q[3]
+
+        # Publish and broadcast the transform
+        self.pub_robot_pose_tf(self.current_state)
+        self.tfBroadcaster.sendTransformMessage(self.current_state)
              
         
 if __name__ == '__main__':
