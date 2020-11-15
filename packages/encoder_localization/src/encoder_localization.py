@@ -47,8 +47,8 @@ class EncoderLocalizationNode(DTROS):
         self.initial_ticks_right = 0.0
 
         # Get static parameters
-        self._radius = rospy.get_param(f'{self.veh_name}/kinematics_node/radius', 100)
-        self._baseline = rospy.get_param('/%s/kinematics_node/baseline', 100)
+        self._radius = rospy.get_param('/' + self.veh_name + '/kinematics_node/radius', 100)
+        self._baseline = rospy.get_param('/' + self.veh_name + '/kinematics_node/baseline', 100)
         self._resolution = 135.0
 
         # Subscribing to the wheel encoders
