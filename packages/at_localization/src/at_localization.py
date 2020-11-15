@@ -9,6 +9,7 @@ from dt_apriltags import Detector
 import rospy
 from duckietown.dtros import DTROS, NodeType
 from sensor_msgs.msg import CompressedImage, CameraInfo
+from image_geometry import PinholeCameraModel
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import TransformStamped, Pose2D
 import tf, tf2_ros
@@ -68,7 +69,9 @@ class ATLocalizationNode(DTROS):
         self.log('Loaded extrinsics calibration file') 
 
         # Retrieve intrinsic info
-        self.cam_model = self.setCamInfo(self.calib_data)
+        cam_info = self.setCamInfo(self.calib_data)
+        self.cam_model = PinholeCameraModel()
+        self.cam_model.fromCameraInfo(cam_info)
         # Initiate maps for rectification
         self._init_rectify_maps()
 
@@ -116,8 +119,8 @@ class ATLocalizationNode(DTROS):
             t = np.array(tag.pose_t)
             # Define homogeneous transformation matrix
             T_CA_prime = np.identity(4, dtype=np.float64)
-            T_CA_prime[0:2,0:2] = R
-            T_CA_prime[0:2,3] = t
+            T_CA_prime[:3,:3] = R
+            T_CA_prime[:3,3] = t[:3]
 
             # Compute apriltag->camera transform
             self.T_CA = tf_conversions.transformations.concatenate_matrices(self.T_CC,T_CA_prime,self.T_AA)
