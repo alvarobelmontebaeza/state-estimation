@@ -116,7 +116,7 @@ class EncoderLocalizationNode(DTROS):
         self.current_state.header.stamp = msg.header.stamp
 
     
-    def publish_transform(self):
+    def publish_transform(self, timer):
         '''
         Callback method for ROS timer to publish messages at a fixed rate
         '''
