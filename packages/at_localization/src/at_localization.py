@@ -267,6 +267,6 @@ class ATLocalizationNode(DTROS):
 
 if __name__ == '__main__':
     # Initialize the node
-    camera_node = ATLocalizationNode(node_name='at_localization_node')
+    at_loc_node = ATLocalizationNode(node_name='at_localization_node')
     # Keep it spinning to keep the node alive
     rospy.spin()
