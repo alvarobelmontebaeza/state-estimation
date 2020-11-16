@@ -57,7 +57,7 @@ class ATLocalizationNode(DTROS):
         self._T_camera_baselink.child_frame_id = 'at_baselink'
         self._T_camera_baselink.transform.translation.x = -0.0582
         self._T_camera_baselink.transform.translation.y = 0.0
-        self._T_camera_baselink.transform.translation.z = -0.1072
+        self._T_camera_baselink.transform.translation.z = -0.110
         q = tf_conversions.transformations.quaternion_from_euler(0.0,np.deg2rad(-15),0.0)
         self._T_camera_baselink.transform.rotation.x = q[0]
         self._T_camera_baselink.transform.rotation.y = q[1]
