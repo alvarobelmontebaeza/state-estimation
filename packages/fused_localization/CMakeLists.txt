@@ -7,6 +7,24 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   duckietown_msgs
   sensor_msgs
+  message_generation
 )
 
-catkin_package()
+catkin_python_setup()
+
+add_service_files(
+  FILES
+  CalibratePose.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+  duckietown_msgs
+  sensor_msgs
+)
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+)
