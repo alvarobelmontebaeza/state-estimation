@@ -99,7 +99,7 @@ class ATLocalizationNode(DTROS):
         # Define subscriber to recieve images
         self.image_sub = rospy.Subscriber('/' + self.veh+ '/camera_node/image/compressed', CompressedImage, self.callback)
         # Publishers and broadcasters
-        self.pub_robot_pose_tf = rospy.Publisher('~pose_transform' , TransformStamped, queue_size=1)
+        self.pub_robot_pose_tf = rospy.Publisher('~at_baselink_transform' , TransformStamped, queue_size=1)
         self.static_tf_br = tf2_ros.StaticTransformBroadcaster()
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
 
