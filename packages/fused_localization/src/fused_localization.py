@@ -59,10 +59,15 @@ class FusedLocalizationNode(DTROS):
     
     def apriltag_cb(self, at_tf):
         # Convert 3D to 2D pose assuming Z = 0 and set fused pose transform
-        self.fused_pose_transform = at_tf
+        self.fused_pose_transform.header.stamp = at_tf.header.stamp
+        self.fused_pose_transform.transform.translation = at_tf.transform.translation
         self.fused_pose_transform.transform.translation.z = 0
         angles = tf_conversions.transformations.euler_from_quaternion(at_tf.transform.rotation)
-        self.fused_pose_transform.transform.rotation = tf_conversions.transformations.quaternion_from_euler(0.0,0.0,angles[2])
+        q = tf_conversions.transformations.quaternion_from_euler(0.0,0.0,angles[2])
+        self.fused_pose_transform.transform.rotation.x = q[0]
+        self.fused_pose_transform.transform.rotation.y = q[1]
+        self.fused_pose_transform.transform.rotation.z = q[2]
+        self.fused_pose_transform.transform.rotation.w = q[3]
 
         if self.first_apriltag:
             # Call service and update encoder estimate
@@ -71,6 +76,11 @@ class FusedLocalizationNode(DTROS):
                 self.first_apriltag = False
             except rospy.ServiceException as e:
                 rospy.logerr('Service call failed: %s'%e)
+        
+        # Update fused pose
+        self.fused_pose.x = self.fused_pose_transform.transform.translation.x
+        self.fused_pose.y = self.fused_pose_transform.transform.translation.y
+        self.fused_pose.theta = angles[2]
         
         # Publish estimate and broadcast every time an apriltag is detected
         self.pub_fused_tf.publish(self.fused_pose_transform)
