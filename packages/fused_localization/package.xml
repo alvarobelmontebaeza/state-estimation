@@ -1,0 +1,11 @@
+<package>
+  <name>fused_localization</name>
+  <version>0.1.0</version>
+  <description>
+  This package implements a localization estimation for the duckiebot by fusioning encoder data and aprilrag detection
+  </description>
+  <maintainer email="alvaro.bb.7@gmail.com">Alvaro Belmonte Baeza</maintainer>
+  <license>None</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
