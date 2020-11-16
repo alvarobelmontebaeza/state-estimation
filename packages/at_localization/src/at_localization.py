@@ -55,10 +55,10 @@ class ATLocalizationNode(DTROS):
         self._T_camera_baselink.header.frame_id = 'camera'
         self._T_camera_baselink.header.stamp = rospy.Time.now()
         self._T_camera_baselink.child_frame_id = 'at_baselink'
-        self._T_camera_baselink.transform.translation.x = -0.0562
+        self._T_camera_baselink.transform.translation.x = -0.0582
         self._T_camera_baselink.transform.translation.y = 0.0
         self._T_camera_baselink.transform.translation.z = -0.1072
-        q = tf_conversions.transformations.quaternion_from_euler(0.0,np.deg2rad(15),0.0)
+        q = tf_conversions.transformations.quaternion_from_euler(0.0,np.deg2rad(-15),0.0)
         self._T_camera_baselink.transform.rotation.x = q[0]
         self._T_camera_baselink.transform.rotation.y = q[1]
         self._T_camera_baselink.transform.rotation.z = q[2]
@@ -67,15 +67,15 @@ class ATLocalizationNode(DTROS):
         # Transformation Matrices to ease computation
         R_MA = tf_conversions.transformations.euler_matrix(0.0,0.0,0.0,'rxyz')
         t_MA = tf_conversions.transformations.translation_matrix(np.array([0.0,0.0,0.09]))
-        self.T_MA = tf_conversions.transformations.concatenate_matrices(R_MA,t_MA)
+        self.T_MA = tf_conversions.transformations.concatenate_matrices(t_MA,R_MA)
 
         R_CB = tf_conversions.transformations.euler_matrix(0.0,np.deg2rad(-15.0),0.0,'rxyz')
-        t_CB = tf_conversions.transformations.translation_matrix(np.array([-0.0562,0.0,-0.1072]))
-        self.T_CB = tf_conversions.transformations.concatenate_matrices(R_CB, t_CB)
+        t_CB = tf_conversions.transformations.translation_matrix(np.array([-0.0582,0.0,-0.1072]))
+        self.T_CB = tf_conversions.transformations.concatenate_matrices(t_CB,R_CB)
         
         # Define rotation matrices to follow axis convention in rviz when using apriltag detection
-        self.T_AA = tf_conversions.transformations.euler_matrix(-np.pi/2.0,0.0,np.pi/2.0,'rxyz')
-        self.T_CC = tf_conversions.transformations.euler_matrix(0.0,-np.pi/2.0, np.pi/2.0,'rxyz')
+        self.T_ApA = tf_conversions.transformations.euler_matrix(np.pi/2.0,0.0, -np.pi/2.0,'rxyz')
+        self.T_CCp = tf_conversions.transformations.euler_matrix(-np.pi/2.0,0.0,-np.pi/2.0,'rzyx')
 
         # Load calibration files
         self.calib_data = self.readYamlFile('/data/config/calibrations/camera_intrinsic/' + self.veh + '.yaml')
@@ -88,7 +88,7 @@ class ATLocalizationNode(DTROS):
         self.cam_model = PinholeCameraModel()
         self.cam_model.fromCameraInfo(cam_info)
         # Initiate maps for rectification
-        self._init_rectify_maps()
+        # self._init_rectify_maps()
 
         # Create AprilTag detector object
         self.at_detector = Detector()
@@ -129,22 +129,23 @@ class ATLocalizationNode(DTROS):
 
         # If an apriltag is detected, update transformations
         for tag in detections:
-            # Retrieve rotation and translation from apriltag to camera
-            R = np.array(tag.pose_R)
-            t = np.array(tag.pose_t)
+            # Retrieve rotation and translation from apriltag to camera and homogeneize
+            R_CA = tf_conversions.transformations.identity_matrix()
+            R_CA[:3,:3] = tag.pose_R
+            p = tag.pose_t.T[0]
+            t_CA = tf_conversions.transformations.translation_matrix(np.array([p[0],p[1],p[2],1.0]))
             # Define homogeneous transformation matrix
-            T_CA_prime = np.identity(4, dtype=np.float64)
-            T_CA_prime[:3,:3] = np.reshape(R,(3,3))
-            T_CA_prime[:3,3] = np.reshape(t,3)
+            T_CpAp = tf_conversions.transformations.concatenate_matrices(t_CA, R_CA)
 
             # Compute apriltag->camera transform
-            self.T_CA = tf_conversions.transformations.concatenate_matrices(self.T_CC, T_CA_prime, self.T_AA)
+            self.T_CA = tf_conversions.transformations.concatenate_matrices(self.T_CCp, T_CpAp, self.T_ApA)
             self.T_AC = tf_conversions.transformations.inverse_matrix(self.T_CA)
 
             # Compute map->baselink transform
             self.T_MB = tf_conversions.transformations.concatenate_matrices(
                 self.T_MA,self.T_AC,self.T_CB
             )
+
             # Obtain TransformStamped messages
             self.T_apriltag_camera.header.stamp = ros_image.header.stamp
             t = tf_conversions.transformations.translation_from_matrix(self.T_AC)
