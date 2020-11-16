@@ -88,7 +88,7 @@ class ATLocalizationNode(DTROS):
         self.cam_model = PinholeCameraModel()
         self.cam_model.fromCameraInfo(cam_info)
         # Initiate maps for rectification
-        # self._init_rectify_maps()
+        self._init_rectify_maps()
 
         # Create AprilTag detector object
         self.at_detector = Detector()
@@ -117,7 +117,7 @@ class ATLocalizationNode(DTROS):
         # Convert to cv2 image
         image = self.readImage(ros_image)
         # Rectify image
-        # image = self.processImage(image)
+        image = self.processImage(image)
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Extract camera parameters
