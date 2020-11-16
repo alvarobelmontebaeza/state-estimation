@@ -52,7 +52,7 @@ class EncoderLocalizationNode(DTROS):
         self.sub_encoder_ticks_right = rospy.Subscriber('/' + self.veh_name + '/right_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='right')
 
         # Publishers
-        self.pub_robot_pose_tf = rospy.Publisher('~pose_transform',TransformStamped,queue_size=1)
+        self.pub_robot_pose_tf = rospy.Publisher('~encoder_baselink_transform',TransformStamped,queue_size=1)
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
         # Define timer to publish messages at a 30 Hz frequency
         self.pub_timer = rospy.Timer(rospy.Duration(1.0/30.0), self.publish_transform)
