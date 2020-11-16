@@ -227,7 +227,7 @@ class ATLocalizationNode(DTROS):
         self.mapx = mapx
         self.mapy = mapy       
     
-    def processImage(self, raw_image, interpolation=cv2.INTER_NEAREST):
+    def processImage(self, raw_image, interpolation=cv2.INTER_LINEAR):
         '''
         Undistort a provided image using the calibrated camera info
         Implementation based on: https://github.com/duckietown/dt-core/blob/952ebf205623a2a8317fcb9b922717bd4ea43c98/packages/image_processing/include/image_processing/rectification.py
