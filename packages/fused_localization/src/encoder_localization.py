@@ -8,6 +8,8 @@ from geometry_msgs.msg import TransformStamped, Pose2D
 import tf
 import tf_conversions
 
+from fused_localization.srv import *
+
 class EncoderLocalizationNode(DTROS):
 
     def __init__(self, node_name):
@@ -126,10 +128,34 @@ class EncoderLocalizationNode(DTROS):
         self.pub_robot_pose_tf.publish(self.current_state)
         self.tfBroadcaster.sendTransformMessage(self.current_state)
     
+    def handle_update_pose(self, req):
+        '''
+        Callback for service request. When called, updates the current encoder_baselink
+        estimate to the provided transform
+        
+        Inputs:
+            - req(CalibratePose.srv): req.transform (TransformStamped) -> Transform to update the encoder_baselink
+        Returns:
+            - req.success (bool): True if done, false otherwise
+        '''
+        # Retrieve requested transform
+        new_tf = req.transform
+        # Update current state transform
+        self.current_state = new_tf
+        # Update pose accordingly
+        self.pose.x = self.current_state.transform.translation.x
+        self.pose.y = self.current_state.transform.translation.y
+        angles = tf_conversions.transformations.euler_from_quaternion(self.current_state.transform.rotation)
+        self.pose.theta = angles[2]
+
+        return CalibratePoseResponse(True)
+
              
         
 if __name__ == '__main__':
     node = EncoderLocalizationNode(node_name= 'encoder_localization_node')
+    # Create service for updating encoder estimate
+    update_srv = rospy.Service('update_encoder_estimate', CalibratePose, node.handle_update_pose)
     # Keep it spinning to keep the node alive
     rospy.loginfo("encoder_localization_node is up and running...")
     rospy.spin()
