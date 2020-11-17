@@ -52,7 +52,7 @@ class EncoderLocalizationNode(DTROS):
         # Subscribing to the wheel encoders
         self.sub_encoder_ticks_left = rospy.Subscriber('/' + self.veh_name + '/left_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='left')
         self.sub_encoder_ticks_right = rospy.Subscriber('/' + self.veh_name + '/right_wheel_encoder_node/tick',WheelEncoderStamped,callback=self.cb_encoder_data,callback_args='right')
-
+        self.log('Subscribed to encoder ticks topic')
         # Publishers
         self.pub_robot_pose_tf = rospy.Publisher('~encoder_baselink_transform',TransformStamped,queue_size=1)
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
@@ -149,20 +149,18 @@ class EncoderLocalizationNode(DTROS):
         q = self.current_state.transform.rotation
         angles = tf_conversions.transformations.euler_from_quaternion(np.array([q.x,q.y,q.z,q.w]))
         self.pose.theta = angles[2]
-        self.log('SERVER RESPONDED')
+        self.log('Responded to requested service)
 
         return CalibratePoseResponse(True)
     
     def onShutdown(self):
-        super(EncoderLocalizationNode, self).onShutdown()
-
-
-             
+        super(EncoderLocalizationNode, self).onShutdown()             
         
 if __name__ == '__main__':
     node = EncoderLocalizationNode(node_name= 'encoder_localization_node')
     # Create service for updating encoder estimate
     update_srv = rospy.Service('update_encoder_estimate', CalibratePose, node.handle_update_pose)
+    rospy.loginfo('Calibrate encoder position server up')
     # Keep it spinning to keep the node alive
     rospy.loginfo("encoder_localization_node is up and running...")
     rospy.spin()
