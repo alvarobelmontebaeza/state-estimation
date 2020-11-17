@@ -149,6 +149,10 @@ class EncoderLocalizationNode(DTROS):
         self.pose.theta = angles[2]
 
         return CalibratePoseResponse(True)
+    
+    def onShutdown(self):
+        super(EncoderLocalizationNode, self).onShutdown()
+
 
              
         
