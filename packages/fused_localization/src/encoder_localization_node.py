@@ -145,8 +145,10 @@ class EncoderLocalizationNode(DTROS):
         # Update pose accordingly
         self.pose.x = self.current_state.transform.translation.x
         self.pose.y = self.current_state.transform.translation.y
-        angles = tf_conversions.transformations.euler_from_quaternion(self.current_state.transform.rotation)
+        q = self.current_state.transform.rotation
+        angles = tf_conversions.transformations.euler_from_quaternion(np.array([q.x,q.y,q.z,q.w]))
         self.pose.theta = angles[2]
+        self.log('SERVER RESPONDED')
 
         return CalibratePoseResponse(True)
     
