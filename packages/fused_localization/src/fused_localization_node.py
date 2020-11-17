@@ -126,6 +126,7 @@ class FusedLocalizationNode(DTROS):
             self.fused_pose.y += diff_y
             self.fused_pose.theta += diff_theta
             # Update fused pose transform
+            self.fused_pose_transform.header.stamp = rospy.Time.now()
             self.fused_pose_transform.transform.translation.x = self.fused_pose.x
             self.fused_pose_transform.transform.translation.y = self.fused_pose.y
             self.fused_pose_transform.transform.translation.z = 0.0
