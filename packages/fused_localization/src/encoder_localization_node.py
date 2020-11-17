@@ -138,6 +138,8 @@ class EncoderLocalizationNode(DTROS):
         Returns:
             - req.success (bool): True if done, false otherwise
         '''
+        # stop timer to avoid publishing non valid values
+        self.pub_timer.shutdown()
         # Retrieve requested transform
         new_tf = req.transform
         # Update current state transform
@@ -151,9 +153,13 @@ class EncoderLocalizationNode(DTROS):
         self.pose.theta = angles[2]
         self.log('Responded to requested service')
 
+        # Restart timer
+        self.pub_timer.start()
+
         return CalibratePoseResponse(True)
     
     def onShutdown(self):
+        self.pub_timer.shutdown()
         super(EncoderLocalizationNode, self).onShutdown()             
         
 if __name__ == '__main__':
