@@ -141,7 +141,7 @@ class EncoderLocalizationNode(DTROS):
         # Retrieve requested transform
         new_tf = req.transform
         # Update current state transform
-        self.current_state.header.stamp = new_tf.header.stamp
+        self.current_state.header.stamp = rospy.Time.now()
         self.current_state.transform = new_tf.transform
         # Update pose accordingly
         self.pose.x = self.current_state.transform.translation.x
