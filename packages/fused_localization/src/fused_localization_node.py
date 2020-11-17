@@ -24,7 +24,7 @@ class FusedLocalizationNode(DTROS):
         rospy.set_param('/' + self.veh +'/kinematics_node/gain', 0.2)
 
         # State variable for the robot
-        self.fused_pose = Pose2D(0.27,0.0,np.pi) # Initial state given arbitrarily
+        self.fused_pose = Pose2D(0.0,0.0,0.0) 
 
         # State estimates from encoder for current and previous message
         self.encoder_tf = TransformStamped()
@@ -51,7 +51,7 @@ class FusedLocalizationNode(DTROS):
         # Subscribers for Apriltag Localization and Encoder Localization
         self.apriltag_sub = rospy.Subscriber('/'+ self.veh + '/at_localization_node/at_baselink_transform', TransformStamped, self.apriltag_cb)
         self.encoder_sub = rospy.Subscriber('/'+ self.veh + '/encoder_localization_node/encoder_baselink_transform', TransformStamped, self.encoder_cb)
-
+        self.log('Subscribed to: %s and %s' % (self.apriltag_sub.name, self.encoder_sub.name))
         # Publishers and broadcasters
         self.pub_fused_tf = rospy.Publisher('~fused_baselink_transform' , TransformStamped, queue_size=1)
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
@@ -63,7 +63,7 @@ class FusedLocalizationNode(DTROS):
         rospy.wait_for_service('/'+ self.veh + '/update_encoder_estimate')
         try:
             self.update_encoder_srv = rospy.ServiceProxy('/'+ self.veh + '/update_encoder_estimate', CalibratePose)
-            self.log('SERVICE CLIENT CREATED')
+            self.log('Created client for service ' + '/'+ self.veh + '/update_encoder_estimate')
         except rospy.ServiceException as e:
             rospy.logerr('Service call failed: %s'%e)
         
@@ -86,8 +86,9 @@ class FusedLocalizationNode(DTROS):
         if self.first_apriltag:
             # Call service and update encoder estimate
             try:
+                self.log('Requested service ' + '/'+ self.veh + '/update_encoder_estimate'  )
                 resp = self.update_encoder_srv(self.fused_pose_transform)
-                self.log('SERVICE CALLED')
+                self.log('Response received!')
                 self.first_apriltag = False
             except rospy.ServiceException as e:
                 rospy.logerr('Service call failed: %s'%e)
