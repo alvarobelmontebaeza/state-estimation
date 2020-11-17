@@ -34,6 +34,12 @@ class FusedLocalizationNode(DTROS):
         self.fused_pose_transform = TransformStamped()
         self.fused_pose_transform.header.frame_id = 'map'
         self.fused_pose_transform.child_frame_id = 'fused_baselink'
+        self.fused_pose_transform.transform.translation = Vector3(self.fused_pose.x,self.fused_pose.y, 0.0)
+        q = tf_conversions.transformations.quaternion_from_euler(0,0,self.fused_pose.theta)
+        self.fused_pose_transform.transform.rotation.x = q[0]
+        self.fused_pose_transform.transform.rotation.y = q[1]
+        self.fused_pose_transform.transform.rotation.z = q[2]
+        self.fused_pose_transform.transform.rotation.w = q[3]
 
         # To account for first apriltag detected and first encoder reading
         self.first_apriltag = True
@@ -50,6 +56,9 @@ class FusedLocalizationNode(DTROS):
         self.pub_fused_tf = rospy.Publisher('~fused_baselink_transform' , TransformStamped, queue_size=1)
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
 
+        # Broadcast fused pose tf once
+        self.tfBroadcaster.sendTransformMessage(self.fused_pose_transform)
+
         # Server client to update encoder estimate
         rospy.wait_for_service('/'+ self.veh + '/update_encoder_estimate')
         try:
@@ -65,7 +74,7 @@ class FusedLocalizationNode(DTROS):
         # Convert 3D to 2D pose assuming Z = 0 and set fused pose transform
         self.fused_pose_transform.header.stamp = rospy.Time.now()
         self.fused_pose_transform.transform.translation = at_tf.transform.translation
-        self.fused_pose_transform.transform.translation.z = 0
+        self.fused_pose_transform.transform.translation.z = 0.0
         q = at_tf.transform.rotation
         angles = tf_conversions.transformations.euler_from_quaternion(np.array([q.x,q.y,q.z,q.w]))
         q = tf_conversions.transformations.quaternion_from_euler(0.0,0.0,angles[2])
@@ -91,7 +100,6 @@ class FusedLocalizationNode(DTROS):
         # Publish estimate and broadcast every time an apriltag is detected
         self.pub_fused_tf.publish(self.fused_pose_transform)
         self.tfBroadcaster.sendTransformMessage(self.fused_pose_transform)
-        self.log('FUSED TRANSFORM BROADCASTED')
 
         # Mark that state has been updated with apriltag
         self.apriltag_detected = True
@@ -102,7 +110,6 @@ class FusedLocalizationNode(DTROS):
             # Get first encoder estimate
             self.first_encoder = False
             self.prev_encoder_tf = enc_tf
-            return
 
         # Update encoder estimation
         self.prev_encoder_tf = self.encoder_tf
