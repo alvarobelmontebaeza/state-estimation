@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   duckietown_msgs
   sensor_msgs
+  std_msgs
   message_generation
 )
 
@@ -25,4 +26,8 @@ generate_messages(
 
 catkin_package(
   CATKIN_DEPENDS message_runtime
+)
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
 )
