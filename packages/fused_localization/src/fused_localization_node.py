@@ -43,17 +43,18 @@ class FusedLocalizationNode(DTROS):
         self.apriltag_detected = False
 
         # Subscribers for Apriltag Localization and Encoder Localization
-        self.apriltag_sub = rospy.Subscriber('~at_baselink_transform', TransformStamped, self.apriltag_cb)
-        self.encoder_sub = rospy.Subscriber('~encoder_baselink_transform', TransformStamped, self.encoder_cb)
+        self.apriltag_sub = rospy.Subscriber('/'+ self.veh + '/at_localization_node/at_baselink_transform', TransformStamped, self.apriltag_cb)
+        self.encoder_sub = rospy.Subscriber('/'+ self.veh + '/encoder_localization_node/encoder_baselink_transform', TransformStamped, self.encoder_cb)
 
         # Publishers and broadcasters
         self.pub_fused_tf = rospy.Publisher('~fused_baselink_transform' , TransformStamped, queue_size=1)
         self.tfBroadcaster = tf.TransformBroadcaster(queue_size=1)
 
         # Server client to update encoder estimate
-        rospy.wait_for_service('update_encoder_estimate')
+        rospy.wait_for_service('/'+ self.veh + '/update_encoder_estimate')
         try:
-            self.update_encoder_srv = rospy.ServiceProxy('update_encoder_estimate', CalibratePose)
+            self.update_encoder_srv = rospy.ServiceProxy('/'+ self.veh + '/update_encoder_estimate', CalibratePose)
+            self.log('SERVICE CLIENT CREATED')
         except rospy.ServiceException as e:
             rospy.logerr('Service call failed: %s'%e)
         
@@ -76,6 +77,7 @@ class FusedLocalizationNode(DTROS):
             # Call service and update encoder estimate
             try:
                 resp = self.update_encoder_srv(self.fused_pose_transform)
+                self.log('SERVICE CALLED')
                 self.first_apriltag = False
             except rospy.ServiceException as e:
                 rospy.logerr('Service call failed: %s'%e)
@@ -88,6 +90,7 @@ class FusedLocalizationNode(DTROS):
         # Publish estimate and broadcast every time an apriltag is detected
         self.pub_fused_tf.publish(self.fused_pose_transform)
         self.tfBroadcaster.sendTransformMessage(self.fused_pose_transform)
+        self.log('FUSED TRANSFORM BROADCASTED')
 
         # Mark that state has been updated with apriltag
         self.apriltag_detected = True
