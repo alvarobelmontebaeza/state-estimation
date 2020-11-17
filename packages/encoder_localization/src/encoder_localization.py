@@ -125,7 +125,10 @@ class EncoderLocalizationNode(DTROS):
         # Publish and broadcast the transform
         self.pub_robot_pose_tf.publish(self.current_state)
         self.tfBroadcaster.sendTransformMessage(self.current_state)
-    
+
+    def onShutdown(self):
+        self.pub_timer.shutdown()
+        super(EncoderLocalizationNode, self).onShutdown()
              
         
 if __name__ == '__main__':
