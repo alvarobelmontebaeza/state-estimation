@@ -22,8 +22,7 @@ class FusedLocalizationNode(DTROS):
         # State variable for the robot
         self.fused_pose = Pose2D(0.27,0.0,np.pi) # Initial state given arbitrarily
 
-        # State estimates from apriltag and encoder
-        self.apriltag_tf = None
+        # State estimates from encoder for current and previous message
         self.encoder_tf = TransformStamped()
         self.prev_encoder_tf = TransformStamped() # To obtain distance traveled
 
@@ -59,7 +58,7 @@ class FusedLocalizationNode(DTROS):
     
     def apriltag_cb(self, at_tf):
         # Convert 3D to 2D pose assuming Z = 0 and set fused pose transform
-        self.fused_pose_transform.header.stamp = at_tf.header.stamp
+        self.fused_pose_transform.header.stamp = rospy.Time.now()
         self.fused_pose_transform.transform.translation = at_tf.transform.translation
         self.fused_pose_transform.transform.translation.z = 0
         angles = tf_conversions.transformations.euler_from_quaternion(at_tf.transform.rotation)
