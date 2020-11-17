@@ -19,6 +19,10 @@ class FusedLocalizationNode(DTROS):
         super(FusedLocalizationNode, self).__init__(node_name=node_name,node_type=NodeType.GENERIC)
         self.veh = rospy.get_namespace().strip("/")
 
+        # Reduce speed to avoid drifting
+        self.default_gain = rospy.get_param('/' + self.veh +'/kinematics_node/gain',default=1.0) 
+        rospy.set_param('/' + self.veh +'/kinematics_node/gain', 0.2)
+
         # State variable for the robot
         self.fused_pose = Pose2D(0.27,0.0,np.pi) # Initial state given arbitrarily
 
@@ -130,6 +134,8 @@ class FusedLocalizationNode(DTROS):
             self.tfBroadcaster.sendTransformMessage(self.fused_pose_transform)
 
     def onShutdown(self):
+        # Restore gain to default value
+        rospy.set_param('/' + self.veh +'/kinematics_node/gain', self.default_gain)
         super(FusedLocalizationNode, self).onShutdown()
 
 
