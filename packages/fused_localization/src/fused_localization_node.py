@@ -66,7 +66,8 @@ class FusedLocalizationNode(DTROS):
         self.fused_pose_transform.header.stamp = rospy.Time.now()
         self.fused_pose_transform.transform.translation = at_tf.transform.translation
         self.fused_pose_transform.transform.translation.z = 0
-        angles = tf_conversions.transformations.euler_from_quaternion(at_tf.transform.rotation)
+        q = at_tf.transform.rotation
+        angles = tf_conversions.transformations.euler_from_quaternion(np.array([q.x,q.y,q.z,q.w]))
         q = tf_conversions.transformations.quaternion_from_euler(0.0,0.0,angles[2])
         self.fused_pose_transform.transform.rotation.x = q[0]
         self.fused_pose_transform.transform.rotation.y = q[1]
@@ -115,8 +116,10 @@ class FusedLocalizationNode(DTROS):
             # Obtain displacement measured by encoders
             diff_x = self.encoder_tf.transform.translation.x - self.prev_encoder_tf.transform.translation.x
             diff_y = self.encoder_tf.transform.translation.y - self.prev_encoder_tf.transform.translation.y
-            curr_angles = tf_conversions.transformations.euler_from_quaternion(self.encoder_tf.transform.rotation)
-            prev_angles = tf_conversions.transformations.euler_from_quaternion(self.prev_encoder_tf.transform.rotation)
+            curr_q = self.encoder_tf.transform.rotation
+            prev_q = self.prev_encoder_tf.transform.rotation
+            curr_angles = tf_conversions.transformations.euler_from_quaternion(np.array([curr_q.x,curr_q.y,curr_q.z,curr_q.w]))
+            prev_angles = tf_conversions.transformations.euler_from_quaternion(np.array([prev_q.x,prev_q.y,prev_q.z,prev_q.w]))
             diff_theta = curr_angles[2] - prev_angles[2]
             # Update fused pose
             self.fused_pose.x += diff_x
