@@ -14,7 +14,7 @@ dt-launchfile-init
 
 # launching app
 echo "Launching fused_localization, at_localization and encoder_localizaion nodes..."
-dt-exec roslaunch fused_localization fused_localization.launch veh:=$VEHICLE_NA>
+dt-exec roslaunch fused_localization fused_localization.launch veh:=$VEHICLE_NAME
 
 
 # ----------------------------------------------------------------------->
