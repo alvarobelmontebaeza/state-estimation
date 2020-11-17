@@ -21,7 +21,7 @@ class FusedLocalizationNode(DTROS):
 
         # Reduce speed to avoid drifting
         self.default_gain = rospy.get_param('/' + self.veh +'/kinematics_node/gain',default=1.0) 
-        rospy.set_param('/' + self.veh +'/kinematics_node/gain', 0.2)
+        rospy.set_param('/' + self.veh +'/kinematics_node/gain', 0.5)
 
         # State variable for the robot
         self.fused_pose = Pose2D(0.0,0.0,0.0) 
